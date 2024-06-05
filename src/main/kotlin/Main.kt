@@ -15,8 +15,13 @@ import javafx.scene.layout.HBox
 import javafx.scene.layout.Priority
 import javafx.scene.layout.VBox
 import javafx.stage.Stage
+import javax.sound.sampled.*
 
 class MainApp: Application() {
+    private var line: TargetDataLine? = null
+    private var audioInputStream: AudioInputStream? = null
+    private var speakerLine: SourceDataLine? = null
+
     override fun start(primaryStage: Stage) {
         // Create a ComboBox for microphone selection
         val micLabel = Label("Select Microphone")
@@ -37,9 +42,11 @@ class MainApp: Application() {
             if (powerToggle.isSelected) {
                 powerToggle.text = "Power On"
                 powerToggle.style = "-fx-font-size: 16px; -fx-padding: 10px; -fx-background-color: green; -fx-text-fill: white;"
+                startAudioCapture(micComboBox.selectionModel.selectedItem)
             } else {
                 powerToggle.text = "Power Off"
                 powerToggle.style = "-fx-font-size: 16px; -fx-padding: 10px; -fx-background-color: black; -fx-text-fill: white;"
+                stopAudioCapture()
             }
         }
 
@@ -138,6 +145,68 @@ class MainApp: Application() {
         primaryStage.scene = scene
         primaryStage.isResizable = false
         primaryStage.show()
+    }
+
+    private fun startAudioCapture(selectedMic: String?) {
+        val mixerInfos = AudioSystem.getMixerInfo()
+        var selectedMixer: Mixer? = null
+        for (mixerInfo in mixerInfos) {
+            val mixer = AudioSystem.getMixer(mixerInfo)
+            val targetLines = mixer.targetLineInfo
+            for (lineInfo in targetLines) {
+                if (lineInfo.lineClass == TargetDataLine::class.java && mixerInfo.name == selectedMic) {
+                    selectedMixer = mixer
+                    break
+                }
+            }
+        }
+
+        if (selectedMixer == null) {
+            println("Selected microphone not found")
+            return
+        }
+
+        val audioFormat = AudioFormat(44100.0f, 16, 1, true, false)
+        val info = DataLine.Info(TargetDataLine::class.java, audioFormat)
+
+        if (!selectedMixer.isLineSupported(info)) {
+            println("Line not supported")
+            return
+        }
+
+        line = selectedMixer.getLine(info) as TargetDataLine
+        line?.open(audioFormat)
+        line?.start()
+
+        val buffer = ByteArray(1024)
+
+        Thread {
+            try {
+                while (line?.read(buffer, 0, buffer.size) != -1) {
+                    playCapturedAudio(buffer)
+                }
+            } catch (ex: Exception) {
+                ex.printStackTrace()
+            }
+        }.start()
+    }
+
+    private fun playCapturedAudio(data: ByteArray) {
+        if (speakerLine == null) {
+            val audioFormat = AudioFormat(44100.0f, 16, 1, true, false)
+            val info = DataLine.Info(SourceDataLine::class.java, audioFormat)
+            speakerLine = AudioSystem.getLine(info) as SourceDataLine
+            speakerLine?.open(audioFormat)
+            speakerLine?.start()
+        }
+        speakerLine?.write(data, 0, data.size)
+    }
+
+    private fun stopAudioCapture() {
+        line?.stop()
+        line?.close()
+        speakerLine?.stop()
+        speakerLine?.close()
     }
 }
 
