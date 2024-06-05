@@ -1,5 +1,6 @@
 package io.mazurco066
 
+import io.mazurco066.utils.SystemUtils
 import javafx.application.Application
 import javafx.beans.binding.Bindings
 import javafx.geometry.Insets
@@ -19,15 +20,15 @@ class MainApp: Application() {
     override fun start(primaryStage: Stage) {
         // Create a ComboBox for microphone selection
         val micLabel = Label("Select Microphone")
-        micLabel.style = "-fx-font-size: 14px; -fx-padding: 0px 0px 5px 0px;"  // Adjusted padding
+        micLabel.style = "-fx-font-size: 14px; -fx-padding: 0px 0px 5px 0px;"
 
         val micComboBox = ComboBox<String>()
         micComboBox.promptText = "Select Microphone"
-        micComboBox.items.addAll(getConnectedMicrophones())
+        micComboBox.items.addAll(SystemUtils.getConnectedMicrophones())
         micComboBox.style = "-fx-padding: 10px;"
 
         val micBox = VBox(5.0, micLabel, micComboBox)
-        micBox.alignment = Pos.CENTER  // Center the microphone selection components
+        micBox.alignment = Pos.CENTER
 
         // Create a power ToggleButton (on/off switch)
         val powerToggle = ToggleButton("Power Off")
@@ -43,11 +44,11 @@ class MainApp: Application() {
         }
 
         val powerBox = VBox(5.0, powerToggle)
-        powerBox.alignment = Pos.CENTER  // Center the power toggle button
+        powerBox.alignment = Pos.CENTER
 
         // Create a volume label
         val volumeLabel = Label("Volume")
-        volumeLabel.style = "-fx-font-size: 14px; -fx-padding: 0px 0px 5px 0px;"  // Adjusted padding
+        volumeLabel.style = "-fx-font-size: 14px; -fx-padding: 0px 0px 5px 0px;"
 
         // Create a volume slider
         val volumeSlider = Slider(0.0, 100.0, 50.0)
@@ -55,7 +56,7 @@ class MainApp: Application() {
         volumeSlider.disableProperty().bind(Bindings.not(powerToggle.selectedProperty()))
 
         val volumeBox = VBox(5.0, volumeLabel, volumeSlider)
-        volumeBox.alignment = Pos.CENTER  // Center the volume control components
+        volumeBox.alignment = Pos.CENTER
 
         // Create optional sliders with checkboxes for Gain, Compression, and Distortion
         val gainLabel = Label("Gain")
@@ -66,7 +67,11 @@ class MainApp: Application() {
             Bindings.not(gainCheckbox.selectedProperty()),
             Bindings.not(powerToggle.selectedProperty()))
         )
-        val gainBox = VBox(5.0, gainLabel, HBox(10.0, gainCheckbox, gainSlider))
+        val gainBox = VBox(5.0, gainLabel, HBox(
+            10.0,
+            gainCheckbox,
+            gainSlider
+        ))
         gainBox.alignment = Pos.CENTER_LEFT
         HBox.setHgrow(gainSlider, Priority.ALWAYS)
         gainBox.children[1].apply {
@@ -82,7 +87,11 @@ class MainApp: Application() {
             compressionCheckbox.selectedProperty()),
             Bindings.not(powerToggle.selectedProperty()))
         )
-        val compressionBox = VBox(5.0, compressionLabel, HBox(10.0, compressionCheckbox, compressionSlider))
+        val compressionBox = VBox(5.0, compressionLabel, HBox(
+            10.0,
+            compressionCheckbox,
+            compressionSlider
+        ))
         compressionBox.alignment = Pos.CENTER_LEFT
         HBox.setHgrow(compressionSlider, Priority.ALWAYS)
         compressionBox.children[1].apply {
@@ -98,7 +107,11 @@ class MainApp: Application() {
             Bindings.not(distortionCheckbox.selectedProperty()),
             Bindings.not(powerToggle.selectedProperty()))
         )
-        val distortionBox = VBox(5.0, distortionLabel, HBox(10.0, distortionCheckbox, distortionSlider))
+        val distortionBox = VBox(5.0, distortionLabel, HBox(
+            10.0,
+            distortionCheckbox,
+            distortionSlider
+        ))
         distortionBox.alignment = Pos.CENTER_LEFT
         HBox.setHgrow(distortionSlider, Priority.ALWAYS)
         distortionBox.children[1].apply {
@@ -125,12 +138,6 @@ class MainApp: Application() {
         primaryStage.scene = scene
         primaryStage.isResizable = false
         primaryStage.show()
-    }
-
-    // Function to get connected microphones (stub implementation)
-    private fun getConnectedMicrophones(): List<String> {
-        // This should be replaced with actual code to list connected microphones
-        return listOf("Microphone 1", "Microphone 2", "Microphone 3")
     }
 }
 
